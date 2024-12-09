@@ -35,11 +35,13 @@ Trim off standard PCB109 primers,  -->
 
 # Scripting language reference
 
-Matchbox doesn't do anything on its own - it requires a script to tell it what to do with each read in your input, written in the matchbox scripting language. To solve a bioinformatic problem, you'll write a matchbox script.
+Matchbox doesn't do anything on its own - it requires a script to tell it what to do with each read in your input, written in the matchbox scripting language.
+
+Matchbox scripts are made of statements, of which there are a few different types.
 
 ## Send statements
 
-Matchbox scripts are made of statements. A send statement has an expression on the left to evaluate, and an output location on the right, to which the resulting value will be sent. The expression and the output location are separated by a pipe `|>`.
+A send statement has an expression on the left to evaluate, and an output location on the right, to which the resulting value will be sent. The expression and the output location are separated by a pipe `|>`.
 
 **Example:** Send the name of each read to an output file called `names.txt`.
 
@@ -47,7 +49,7 @@ Matchbox scripts are made of statements. A send statement has an expression on t
 read.id |> file('ids.txt')
 ```
 
-You can omit the output location, which will by default send the value to stdout.
+You can omit the output location, which will send the value to stdout.
 
 **Example:** Print the full sequence of each read to stdout.
 ```python
@@ -58,7 +60,7 @@ A list of output locations is [given below](#output-locations).
 
 ## Assignment with `:`
 
-Most languages offer a way of assigning a name to a value, so that it can be used as shorthand. In matchbox, this is done with a colon `:`. Names can contain letters, numbers and underscores (though they cannot start with a number).
+Using a colon `:`, you can assign a name to a value, so that it can be used as shorthand elsewhere in the script. Names can contain letters, numbers and underscores (though they cannot start with a number).
 
 **Example:** Print out the ID of each read to a file called `ids.txt`.
 ```python
@@ -72,7 +74,7 @@ read.id |> output
 
 Statements can be conditional using `if`, only executing the branch on the right of the arrow `=>` when their conditions are met.
 
-**Example:** Filter for reads longer than 1000 bases, and send them to a file `long.fq`.
+**Example:** If a read is longer than 1000 bases, send it to a file `long.fq`.
 
 ```python
 if read.seq.len() > 1000 => read |> file('long.fq')
@@ -82,14 +84,14 @@ if read.seq.len() > 1000 => read |> file('long.fq')
 
 Conditional statements can include pattern-matching, allowing reads to be taken apart structurally. The pattern, enclosed in square brackets `[]`, describes a geometry which must match the read for the statement on the right of the arrow `=>` to execute. Fixed sequences can be used in patterns (or variables which refer to fixed sequences, such as `primer` in the below example). Additionally, variable regions denoted with underscores `_` can be used, each consisting of any number of nucleotides.
 
-**Example:** Filter for reads which contain a primer (with any number of nucleotides on either side), and send them to a file `filtered.fq`.
+**Example:** If a read contains a primer (with any number of nucleotides on either side), send it to a file `filtered.fq`.
 ```python
 primer: AGTCAGTGCTAG
 
 if read is [_ primer _] => read |> file('filtered.fq')
 ```
 
-When a pattern matches a read multiple times (e.g. when multiple primers are present), only the first match of the pattern is executed. *I'm working on allowing you to execute the branch for all matches of a pattern within each read, if you wish to.*
+When a pattern matches a read multiple times (e.g. when multiple primers are present), only the first match of the pattern is executed. *I'm working on optionally allowing you to execute the branch each time the pattern is matched within each read.*
 
 Edit distance is allowed when matching, and the command-line argument `error-rate` allows the user to decide what proportion of each sequence needs to match. *I'm working on a feature to allow you to specify error rate for each individual sequence, if you wish to.*
 
@@ -106,9 +108,9 @@ if read is
 
 ### Extracting regions with `:`
 
-Often, you want to extract specific parts of a read, while trimming off other parts. Using a colon `:`, you can bind a user-defined name to a slice of the read. This slice retains the metadata of the read but includes only the part of the sequence that falls within the specified region.
+Often, you want to extract specific parts of a read, while trimming off other parts. Using a colon `:`, you can bind a user-defined name to a slice of the read. This slice retains the metadata of the read but includes only the part of the sequence that falls within the specified region; hence, it's the simplest way to trim reads in matchbox.
 
-**Example:** Filter for reads which contain `AGAG` followed by `CTCT`. Call the region in between them `mid`, and then print out these trimmed regions to a file `filtered.fa`.
+**Example:** If a read contains `AGAG` and later `CTCT`, then call the region in between them `mid`, and then print out this trimmed region `mid` to a file `filtered.fa`.
 ```python
 if read is [_ AGAG mid:_ CTCT _] => mid |> file('filtered.fa')
 ```
@@ -119,7 +121,7 @@ For FASTQ and SAM, the quality score is also trimmed to only contain the variabl
 
 To specify a region of a fixed length `n`, vertical bars `|n|` can be used.
 
-**Example:** Filter for reads which contain the sequence `AGAG` followed by `CTCT`. Extract four bases following the `AGAG`, and call these `bc`. Extract everything after this until `CTCT`, and call it `mid`. Then, tag this trimmed region with the barcode sequence that was found, and print the trimmed reads to a file `filtered.fa`.
+**Example:** If a read contains the sequence `AGAG` and later `CTCT`, then extract four bases following `AGAG`, and call these `bc`. Extract everything after this until `CTCT`, and call it `mid`. Then, tag this trimmed region `mid` with the barcode sequence that was found, and print the trimmed reads to a file `filtered.fa`.
 ```python
 if read is [_ AGAG bc:|4| mid:_ CTCT _] =>
     mid.tag('barcode={bc.seq}') |> file('filtered.fa')
@@ -134,7 +136,7 @@ if read is [first:|4| _] => first.seq |> counts
 
 Sometimes, a read contains a sequence from a known list of sequences (e.g. a barcode list). With the `for` syntax, you can introduce a named parameter to handle such regions. For each value from the list that can be used match the pattern, the branch is executed. *I'm adding a feature to specify whether you want to execute the branch for all matching barcodes, or just the best matching one.*
 
-**Example:** Load a list of barcodes from `barcodes.tsv`. If a read contains a primer immediately followed by a barcode sequence, send the read to `filtered.fq`. Also, send the name of the matched barcode to `counts`, to quantify which barcodes appeared most frequently. If a read did not contain the primer + barcode structure, send it to `bad.fq`. (For this script to work, your barcode TSV must contain columns called 'name' and 'seq'.)
+**Example:** Load a list of barcodes from `barcodes.tsv`. If a read contains a primer immediately followed by a barcode sequence, send the read to `filtered.fq`. Also, send the name of the matched barcode to `counts`, to quantify which barcodes appeared most frequently. If a read did not contain the primer and barcode structure, send it to `bad.fq`. (For this script to work, your barcode TSV must contain columns called 'name' and 'seq'.)
 
 ```python
 primer: AGTCAGTGCTAG
@@ -161,7 +163,7 @@ if read.seq.len() > 1000 => { read.id; read |> file('filtered.fq') }
 
 ## Descriptive analysis with `as`
 
-Pattern matching is great when you're already sure of what structure your reads have. First, though, it's good to search through your reads to find out (or confirm) what structure is present. An `as` expression allows you to infer a read's structure in terms of some fixed sequences you expect to find.
+Pattern matching is great when you're already sure of what structure your reads have. First, though, it's good to search through your reads to discover what structure is present. An `as` expression allows you to infer a read's structure in terms of some fixed sequences you expect to find.
 
 **Example:** Describe a read in terms of the presence of TSO sequences and poly(A) tails. Accumulate these into counts, to get a summary of general read structure.
 ```python
@@ -204,11 +206,11 @@ There are a few built-in output locations to which you can send values. They acc
 
 An expression can be a variable name, assuming that name has been bound in this scope, or in any looser scope.
 
-### Read formats
+#### Input read formats
 
-`read` is a built-in variable which refers to the current read being processed. It is a record type, meaning it has fields that can be accessed using dot `.` notation.
+`read` is a built-in variable which refers to the current read being processed. It has fields that can be accessed using dot `.` notation.
 
-FASTA, FASTQ and SAM reads contain some differences in their fields. Depending on the type of read you are inputting into matchbox, different fields will be available to you.
+FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the file type you are inputting into matchbox, different fields will be available to you.
 
 <table>
     <tr>
@@ -363,6 +365,8 @@ The full function list is given here:
         <td>Convert a sequence to its amino acid string.</td>
     </tr>
 </table>
+
+*todo: write up the rest of the functions*
 
 ### Operators
 
