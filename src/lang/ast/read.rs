@@ -160,10 +160,11 @@ impl<'a> FastaRead<'a> {
     /// Gets the description line of a read.
     pub fn desc(&'a self) -> &'a str {
         match self {
-            FastaRead::SeqIOFasta(fasta) => {
-                fasta.desc().unwrap().expect("Couldn't read description!")
-            }
-            FastaRead::BioFasta(fasta) => fasta.desc().unwrap(),
+            FastaRead::SeqIOFasta(fasta) => fasta
+                .desc()
+                .expect("Couldn't read description!")
+                .unwrap_or_default(),
+            FastaRead::BioFasta(fasta) => fasta.desc().unwrap_or_default(),
             FastaRead::Synthetic { desc, .. } => desc,
         }
     }
@@ -217,7 +218,7 @@ impl<'a> FastqRead<'a> {
     /// Gets the id of a read.
     pub fn id(&self) -> &str {
         match self {
-            FastqRead::SeqIOFastq(fastq) => fastq.id().ok().unwrap_or(""),
+            FastqRead::SeqIOFastq(fastq) => fastq.id().ok().unwrap_or_default(),
             FastqRead::BioFastq(fastq) => fastq.id(),
             FastqRead::Synthetic { id, .. } => id,
         }
@@ -226,10 +227,11 @@ impl<'a> FastqRead<'a> {
     /// Gets the description line of a read.
     pub fn desc(&self) -> &str {
         match self {
-            FastqRead::SeqIOFastq(fastq) => {
-                fastq.desc().unwrap().expect("Couldn't read description!")
-            }
-            FastqRead::BioFastq(fastq) => fastq.desc().unwrap(),
+            FastqRead::SeqIOFastq(fastq) => fastq
+                .desc()
+                .expect("Couldn't read description!")
+                .unwrap_or_default(),
+            FastqRead::BioFastq(fastq) => fastq.desc().unwrap_or_default(),
             FastqRead::Synthetic { desc, .. } => desc,
         }
     }
