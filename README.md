@@ -12,7 +12,7 @@ Currently, you need to clone this repo and build it with cargo.
 git clone ..
 cd matchbox-alpha
 cargo build --release
-./target/release/matchbox --help
+./target/release/matchbox-alpha --help
 ```
 
 # Usage
