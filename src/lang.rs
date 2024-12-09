@@ -12,7 +12,6 @@ use ast::{
 };
 use cli::GlobalConfig;
 use indicatif::ProgressBar;
-use rustyline::{error::ReadlineError, DefaultEditor};
 
 use crate::util::{Arena, Par};
 
@@ -104,36 +103,36 @@ pub fn run<'a>(reads: &str, code: &str, global_config: &GlobalConfig) -> Result<
     Ok(())
 }
 
-pub fn repl(input: &str, global_config: &GlobalConfig) {
-    let mut rl = DefaultEditor::new().unwrap();
+// pub fn repl(input: &str, global_config: &GlobalConfig) {
+//     let mut rl = DefaultEditor::new().unwrap();
 
-    // #[cfg(feature = "with-file-history")]
-    // if rl.load_history("history.txt").is_err() {
-    //     println!("No previous history.");
-    // }
-    loop {
-        let readline = rl.readline("> ");
-        match readline {
-            Ok(line) => {
-                println!();
-                match run(input, &line, global_config) {
-                    Ok(_) => {}
-                    Err(e) => println!("{:?}", e),
-                }
-                println!();
-            }
-            Err(ReadlineError::Interrupted) => {
-                println!("CTRL-C");
-                break;
-            }
-            Err(ReadlineError::Eof) => {
-                println!("CTRL-D");
-                break;
-            }
-            Err(err) => {
-                println!("Error: {:?}", err);
-                break;
-            }
-        }
-    }
-}
+//     // #[cfg(feature = "with-file-history")]
+//     // if rl.load_history("history.txt").is_err() {
+//     //     println!("No previous history.");
+//     // }
+//     loop {
+//         let readline = rl.readline("> ");
+//         match readline {
+//             Ok(line) => {
+//                 println!();
+//                 match run(input, &line, global_config) {
+//                     Ok(_) => {}
+//                     Err(e) => println!("{:?}", e),
+//                 }
+//                 println!();
+//             }
+//             Err(ReadlineError::Interrupted) => {
+//                 println!("CTRL-C");
+//                 break;
+//             }
+//             Err(ReadlineError::Eof) => {
+//                 println!("CTRL-D");
+//                 break;
+//             }
+//             Err(err) => {
+//                 println!("Error: {:?}", err);
+//                 break;
+//             }
+//         }
+//     }
+// }

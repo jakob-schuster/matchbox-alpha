@@ -20,7 +20,6 @@ rayon = "*"
 peg = "*"
 seq_io = "*"
 flate2 = { version = "*", features = ["zlib-ng"] }
-rustyline = "*"
 bumpalo = "*"
 indicatif = "*"
 noodles = { version = "0.83.0", features = ["sam"] }
