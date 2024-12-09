@@ -410,3 +410,11 @@ Operators can be used
         <td>Send a value to the output</td>
     </tr>
 </table>
+
+## Todo
+
+Features I'm currently adding to matchbox.
+
+- Support for paired-end reads
+- Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
+- Handle SAM optional fields
