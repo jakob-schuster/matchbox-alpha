@@ -6,7 +6,7 @@ Matchbox is a flexible read processor, capable of performing powerful transforma
 
 # Installation
 
-Download the binary directly, or clone this repo and build it with cargo.
+Currently, you need to clone this repo and build it with cargo.
 
 ```
 git clone ..
@@ -37,8 +37,6 @@ Trim off standard PCB109 primers,  -->
 
 Matchbox doesn't do anything on its own - it requires a script to tell it what to do with each read in your input, written in the matchbox scripting language. To solve a bioinformatic problem, you'll write a matchbox script.
 
-Here I describe every feature of matchbox.
-
 ## Send statements
 
 Matchbox scripts are made of statements. A send statement has an expression on the left to evaluate, and an output location on the right, to which the resulting value will be sent. The expression and the output location are separated by a pipe `|>`.
@@ -60,7 +58,7 @@ A list of output locations is [given below](#output-locations).
 
 ## Assignment with `:`
 
-Most languages offer a way of binding a name to a value, so that it can be used as shorthand. In matchbox, this is done with a colon `:`. Names can contain letters, numbers and underscores (though they cannot start with a number).
+Most languages offer a way of assigning a name to a value, so that it can be used as shorthand. In matchbox, this is done with a colon `:`. Names can contain letters, numbers and underscores (though they cannot start with a number).
 
 **Example:** Print out the ID of each read to a file called `ids.txt`.
 ```python
