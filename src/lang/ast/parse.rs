@@ -148,7 +148,7 @@ peg::parser! {
         #[cache_left_rec]
         rule exp() -> Exp
             // describe sugar
-            = e:exp() _ "describe" _ "{" _ lines:(describe_line() ** (whitespace_except_newline() ['\n' | ';'] _)) (whitespace_except_newline() ['\n' | ';'] _)? _ "}"
+            = e:exp() _ "as" _ "{" _ lines:(describe_line() ** (whitespace_except_newline() ['\n' | ';'] _)) (whitespace_except_newline() ['\n' | ';'] _)? _ "}"
                 { Exp::Call(String::from("describe"), vec![e, Exp::ListLit(lines), Exp::NumLit(2), Exp::BoolLit(false)]) }
 
             // clumsy grouping sugar
