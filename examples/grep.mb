@@ -1,0 +1,8 @@
+primer: CTACACGACGCTCTTCCGATCT
+out: file('grepped.fq')
+
+if read is
+    [_ primer _] => { read |> out; '+' |> counts }
+    [_ -primer _] => { read |> out; '-' |> counts }
+
+'total' |> counts

@@ -1,0 +1,9 @@
+fwr4: TGGGGCAAAGGGACCCAGGTCAC
+vgenes: csv('vgenes.csv')
+
+'total' |> counts
+
+if read is [_ x:(v.seq _) fwr4 _] for v in vgenes => {
+    '{read.id},{v.name},{translate(x.seq)}' |> file('out.csv')
+    'good' |> counts
+}

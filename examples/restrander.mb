@@ -1,0 +1,32 @@
+tso: TTTCTGTTGGTGCTGATATTGCTGGG
+rtp: ACTTGCCTGTCGCTCTATCTTCTTTTTTTTTT
+
+polya: AAAAAAAAAAAA
+polyt: -polya
+
+'total' |> counts
+
+if read is
+	[|200:(_ polya _)| _] => {
+    	'+' |> counts; read.tag('strand=+') |> file('out.fq')
+	}
+	[|200:(_ polyt _)| _] => {
+    	'-' |> counts; minus(read.tag('strand=-')) |> file('out.fq')
+	}
+
+	[_ tso _ -tso _] => {
+		'tso-tso artefact' |> counts; read.tag('artefact=tso') |> file('unknowns.fq')
+	}
+	[_ rtp _ -rtp _] => {
+		'rtp-rtp artefact' |> counts; read.tag('artefact=rtp') |> file('unknowns.fq')
+	}
+
+	[_ tso _ -rtp _] => {
+        '+' |> counts; read.tag('strand=+') |> file('out.fq')
+	}
+	[_ rtp _ -tso _] => {
+        '-' |> counts; minus(read.tag('strand=-')) |> file('out.fq')
+	}
+    [_] => {
+        '?' |> counts; read.tag('strand=?') |> file('unknowns.fq')
+    }
