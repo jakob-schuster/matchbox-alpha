@@ -1,0 +1,21 @@
+linker1: ATCCACGTGCTTGAGACTGTGG
+linker2: GTGGCCGATGTTTCGCATCGGCGTACGACT
+r1_r: csv('local/r1_R.csv')
+r1_t: csv('local/r1_T.csv')
+r2_3: csv('local/r2_r3.csv')
+
+'total' |> counts
+
+if read is [ _ bc3:|8| linker2 bc2:|8| linker1 bc1:|8| _ ] => {
+	'linkers' |> counts
+
+	if bc1 is
+		[_ -cast_seq(r.seq) _] for r in r1_r => 'bc1(r)' |> counts
+		[_ -cast_seq(t.seq) _] for t in r1_t => 'bc1(t)' |> counts
+
+	if bc2 is
+		[_ -cast_seq(b.seq) _] for b in r2_3 => 'bc2' |> counts
+
+	if bc3 is
+		[_ -cast_seq(b.seq) _] for b in r2_3 => 'bc3' |> counts
+}
