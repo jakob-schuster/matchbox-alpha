@@ -505,7 +505,7 @@ pub fn apply<'a, 'b>(
             _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
         },
 
-        "csv" => match &args[..] {
+        "csv" => match args {
             [Val::Str(s)] => {
                 let mut rdr = csv::ReaderBuilder::new()
                     .from_path(Path::new(&s))

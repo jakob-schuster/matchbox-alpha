@@ -12,13 +12,11 @@ impl<'a> Matcher<'a> {
         match (self.read.eval(arena, ctx), self.seq.eval(arena, ctx)) {
             (Ok(new_read_val), Ok(new_seq_val)) => {
                 // we have a read and a seq
-                if let (Val::Struct(StructVal::Read(new_read)), Val::Seq(new_seq)) =
-                    (new_read_val, new_seq_val)
-                {
+                if let (Val::Struct(sv), Val::Seq(new_seq)) = (new_read_val, new_seq_val) {
                     for par_arm in &self.arms {
                         let effs = match par_arm {
                             Par::Val(v) => v.eval(arena, ctx),
-                            Par::Exp(e) => e.eval(&self.config, new_read, new_seq, arena, ctx),
+                            Par::Exp(e) => e.eval(&self.config, sv, new_seq, arena, ctx),
                         }?;
 
                         if !effs.is_empty() {
@@ -72,7 +70,7 @@ impl<'a, 'b> Arm<'a> {
     pub fn eval(
         &self,
         config: &Config,
-        read: &'b Read<'a>,
+        read: &'b StructVal,
         seq: &'b [u8],
         arena: &'a Arena,
         ctx: &'a Context,
@@ -178,7 +176,7 @@ impl<'a, 'b> Arm<'a> {
         // first try to eval
         match (read, seq) {
             (Exp::Static(read_val), Exp::Static(seq_val)) => match (read_val, seq_val) {
-                (Val::Struct(StructVal::Read(read_raw)), Val::Seq(seq_raw)) => {
+                (Val::Struct(read_raw), Val::Seq(seq_raw)) => {
                     // must be able to simplify completely
                     Ok(Par::Val(Stmt::Static(
                         self.eval(config, read_raw, seq_raw, arena, ctx)?,
@@ -232,7 +230,7 @@ impl<'a: 's, 's> Op<'a> {
     /// returning a new context of binds made by the Op.
     fn eval_ctx(
         &self,
-        read: &'a Read<'a>,
+        read: &'a StructVal,
         seq: &'a [u8],
         bind_ctx: &BindCtx<'a>,
         loc_ctx: &LocCtx,
@@ -369,7 +367,7 @@ impl<'a: 's, 's> Op<'a> {
                         match apply(
                             &Id::from("slice"),
                             &[
-                                arena.alloc(Val::Struct(StructVal::Read(read))),
+                                arena.alloc(Val::Struct(read.clone())),
                                 arena.alloc(Val::Num(*start)),
                                 arena.alloc(Val::Num(*end)),
                             ],
