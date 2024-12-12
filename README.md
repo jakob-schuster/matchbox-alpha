@@ -418,3 +418,5 @@ Features I'm currently adding to matchbox.
 - Support for paired-end reads
 - Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
 - Handle SAM optional fields
+- Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
+- Maybe make `tag` take many args?
