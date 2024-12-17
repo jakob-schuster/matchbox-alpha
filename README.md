@@ -364,6 +364,12 @@ The full function list is given here:
         <td><b>Str</b></td>
         <td>Convert a sequence to its amino acid string.</td>
     </tr>
+    <tr>
+        <td>concat</td>
+        <td><b>Rec</b>,<br><b>Rec</b></td>
+        <td><b>Rec</b></td>
+        <td>Concatenate two reads (or slices of a read) together. The metadata of the first read is kept (ID, description, etc.) while the sequences (and quality scores, if applicable) of the two reads are concatenated.</td>
+    </tr>
 </table>
 
 *todo: write up the rest of the functions*
@@ -420,4 +426,4 @@ Features I'm currently adding to matchbox.
 - Handle SAM optional fields
 - Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
   - Maybe make `tag` take many args?
-- Concatenate two parts of a read together, e.g. when rotating a plasmid `[part1:_ part2:(AGCTAGTCG _)] => part2 + part1 |> file('rotated.fq')`
+- Concatenate two parts of a read together with an operator, e.g. when rotating a plasmid `[part1:_ part2:(AGCTAGTCG _)] => part2 + part1 |> file('rotated.fq')`
