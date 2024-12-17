@@ -281,13 +281,13 @@ impl<'a> PreArm<'a> {
             // todo: check if the loc is fixed
             let fixed = Ran::new(search.start == ran.start, search.end == ran.end);
 
-            ops.push(Par::Exp(PreOp::Restrict(
-                binds.clone(),
+            ops.push(Par::Exp(PreOp::Restrict {
+                ids: binds.clone(),
                 exp,
                 search,
                 fixed,
-                vec![ran.clone()],
-            )));
+                save: vec![ran.clone()],
+            }));
 
             known.push(ran.start);
             known.push(ran.end);

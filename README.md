@@ -419,4 +419,5 @@ Features I'm currently adding to matchbox.
 - Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
 - Handle SAM optional fields
 - Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
-- Maybe make `tag` take many args?
+  - Maybe make `tag` take many args?
+- Concatenate two parts of a read together, e.g. when rotating a plasmid `[part1:_ part2:(AGCTAGTCG _)] => part2 + part1 |> file('rotated.fq')`

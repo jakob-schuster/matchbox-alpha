@@ -38,9 +38,19 @@ impl<'a: 'b, 'b> PreOp<'a> {
     pub fn subs(&self, id: &Id, val: &Exp<'b>) -> PreOp<'b> {
         match self {
             PreOp::Let(a, b) => PreOp::Let(*a, b.subs(id, val)),
-            PreOp::Restrict(a, b, c, d, e) => {
-                PreOp::Restrict(a.clone(), b.subs(id, val), c.clone(), d.clone(), e.clone())
-            }
+            PreOp::Restrict {
+                ids: a,
+                exp: b,
+                search: c,
+                fixed: d,
+                save: e,
+            } => PreOp::Restrict {
+                ids: a.clone(),
+                exp: b.subs(id, val),
+                search: c.clone(),
+                fixed: d.clone(),
+                save: e.clone(),
+            },
         }
     }
 }

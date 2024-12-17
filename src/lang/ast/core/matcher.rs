@@ -63,7 +63,13 @@ type ParOp<'a> = Par<PreOp<'a>, Op<'a>>;
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum PreOp<'a> {
     Let(Loc, PreLocExp<'a>),
-    Restrict(Vec<&'a Id>, Exp<'a>, Ran<Loc>, Ran<bool>, Vec<Ran<Loc>>),
+    Restrict {
+        ids: Vec<&'a Id>,
+        exp: Exp<'a>,
+        search: Ran<Loc>,
+        fixed: Ran<bool>,
+        save: Vec<Ran<Loc>>,
+    },
 }
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Op<'a> {
@@ -93,10 +99,16 @@ impl<'a: 'b, 'b> PreOp<'a> {
     ) -> Result<Op<'a>, EvalError<'a>> {
         match self {
             PreOp::Let(l, le) => Ok(Op::Let(*l, le.eval(arena, ctx)?)),
-            PreOp::Restrict(ids, ev, search, fixed, save) => {
+            PreOp::Restrict {
+                ids,
+                exp,
+                search,
+                fixed,
+                save,
+            } => {
                 if ids.len().eq(&0) {
                     // special case - just wrap up the one value
-                    let val = ev.eval(arena, ctx)?;
+                    let val = exp.eval(arena, ctx)?;
 
                     match val {
                         Val::Seq(bytes) => Ok(Op::Restrict(
@@ -149,10 +161,10 @@ impl<'a: 'b, 'b> PreOp<'a> {
                                     .map(|bind_ctx| {
                                         let val = bind_ctx
                                             .iter()
-                                            .fold(ev.clone(), |ev, (id, val)| {
+                                            .fold(exp.clone(), |ev, (id, val)| {
                                                 ev.subs(id, &Exp::Static(val))
                                             })
-                                            .eval(arena, &ctx)?;
+                                            .eval(arena, ctx)?;
 
                                         if let Val::Seq(s) = val {
                                             Ok((
@@ -186,7 +198,7 @@ impl<'a> PreLocExp<'a> {
     fn eval(&self, arena: &'a Arena, ctx: &'a Context) -> Result<LocExp, EvalError<'a>> {
         match self {
             PreLocExp::Offset(le, e) => {
-                let l = le.try_map_cl(|le0| le0.simplify(arena, &ctx))?;
+                let l = le.try_map_cl(|le0| le0.simplify(arena, ctx))?;
                 let v = e.eval(arena, ctx)?;
 
                 match &l {
@@ -204,8 +216,8 @@ impl<'a> PreLocExp<'a> {
     fn simplify(&self, arena: &'a Arena, ctx: &'a Context) -> Result<ParLocExp<'a>, EvalError<'a>> {
         match self {
             PreLocExp::Offset(le, e) => {
-                let l = le.try_map_cl(|le0| le0.simplify(arena, &ctx))?;
-                let e = e.simplify(arena, &ctx);
+                let l = le.try_map_cl(|le0| le0.simplify(arena, ctx))?;
+                let e = e.simplify(arena, ctx);
 
                 match (&l, &e) {
                     (Par::Val(l), Exp::Static(v)) => match v {
