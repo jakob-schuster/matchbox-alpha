@@ -430,6 +430,58 @@ pub fn apply<'a, 'b>(
             }
         }
 
+        // Return a new struct with all the same parameters as s1, but with the sequence (and if applicable, the quality score) from s2 appended on the end
+        "concat" => match args {
+            [Val::Struct(s1), Val::Struct(s2)] => {
+                // Get sequences from both structs
+                let seq1 = match s1
+                    .address("seq", arena)
+                    .map_err(|e| FunctionError::EvalError(Rc::new(e)))?
+                {
+                    Val::Seq(seq) => Ok(*seq),
+                    v => Err(FunctionError::EvalError(Rc::new(EvalError::TypeError(
+                        v.clone(),
+                    )))),
+                }?;
+
+                let seq2 = match s2
+                    .address("seq", arena)
+                    .map_err(|e| FunctionError::EvalError(Rc::new(e)))?
+                {
+                    Val::Seq(seq) => Ok(*seq),
+                    v => Err(FunctionError::EvalError(Rc::new(EvalError::TypeError(
+                        v.clone(),
+                    )))),
+                }?;
+
+                // Combine sequences
+                let new_seq = arena.alloc(Val::Seq(
+                    arena.alloc(seq1.iter().chain(seq2).cloned().collect_vec()),
+                ));
+
+                // If quality scores exist, combine those too
+                let new_sv = match (s1.address("qual", arena), s2.address("qual", arena)) {
+                    (Ok(Val::Str(q1)), Ok(Val::Str(q2))) => {
+                        let new_qual = format!("{}{}", q1, q2);
+                        s1.with_all(
+                            &[
+                                ("seq", new_seq),
+                                ("qual", arena.alloc(Val::Str(arena.alloc(new_qual)))),
+                            ],
+                            arena,
+                        )
+                        .map_err(|e| FunctionError::EvalError(Rc::new(e)))?
+                    }
+                    _ => s1
+                        .with_all(&[("seq", new_seq)], arena)
+                        .map_err(|e| FunctionError::EvalError(Rc::new(e)))?,
+                };
+
+                Ok(arena.alloc(Val::Struct(new_sv)))
+            }
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
         "out" => {
             match args {
                 [v] => Ok(arena.alloc(Val::Eff(v, handler::Handler::Stdout))),
