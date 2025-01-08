@@ -171,7 +171,7 @@ tso: AGCTGATCG
 read as { poly_a: AAAAAAAA, tso } |> counts
 ```
 
-## Output locations
+## Outputs
 
 There are a few built-in output locations to which you can send values. They accumulate output from across all of your reads, and they are the way of getting filtered or summarised information out of matchbox.
 
@@ -341,34 +341,58 @@ The full function list is given here:
         <th>Description</th>
     </tr>
     <tr>
-        <td>len / length</td>
+        <td><code>len</code> / <code>length</code></td>
         <td><b>Str</b> / <b>Seq</b> / <b>List</b></td>
         <td><b>Num</b></td>
         <td>Find the length of a string, sequence or list.</td>
     </tr>
     <tr>
-        <td>rename</td>
+        <td><code>rename</code></td>
         <td><b>Rec</b>,<br><b>Str</b></td>
         <td><b>Rec</b></td>
         <td>Create a new record, with an updated 'name' field.</td>
     </tr>
     <tr>
-        <td>slice</td>
+        <td><code>slice</code></td>
         <td><b>Rec</b> / <b>Seq</b> / <b>Str</b>,<br><b>Num</b>,<br><b>Num</b></td>
         <td><b>Rec</b> / <b>Seq</b> / <b>Str</b></td>
         <td>Take a slice of a read, sequence or string, from a starting index to an ending index. Note that slicing is inclusive of the start and exclusive of the end, so <code>slice(read, n, m)</code> is the interval <code>n <= x < m</code>. Hence, you can say <code>slice(read, 0, len(read.seq))</code>.</td>
     </tr>
     <tr>
-        <td>translate</td>
+        <td><code>translate</code></td>
         <td><b>Seq</b></td>
         <td><b>Str</b></td>
         <td>Convert a sequence to its amino acid string.</td>
     </tr>
     <tr>
-        <td>concat</td>
+        <td><code>concat</code></td>
         <td><b>Rec</b>,<br><b>Rec</b></td>
         <td><b>Rec</b></td>
         <td>Concatenate two reads (or slices of a read) together. The metadata of the first read is kept (ID, description, etc.) while the sequences (and quality scores, if applicable) of the two reads are concatenated.</td>
+    </tr>
+    <tr>
+        <td><code>to_str</code></td>
+        <td><b>Bool</b> / <b>Num</b> / <b>Seq</b></td>
+        <td><b>Str</b></td>
+        <td>Convert a value to string format.</td>
+    </tr>
+    <tr>
+        <td><code>to_seq</code></td>
+        <td><b>Str</b></td>
+        <td><b>Seq</b></td>
+        <td>Convert a value to a sequence.</td>
+    </tr>
+    <tr>
+        <td><code>csv</code></td>
+        <td><b>Str</b></td>
+        <td><b>List(Rec)</b></td>
+        <td>Given a filename, open the file as CSV and read all the rows into a list of records. Each record has fields named after the columns of the CSV, with values from the given row.</td>
+    </tr>
+    <tr>
+        <td><code>tsv</code></td>
+        <td><b>Str</b></td>
+        <td><b>List(Rec)</b></td>
+        <td>Given a filename, open the file as TSV and read all the rows into a list of records. Each record has fields named after the columns of the TSV, with values from the given row.</td>
     </tr>
 </table>
 
@@ -376,7 +400,7 @@ The full function list is given here:
 
 ### Operators
 
-Operators can be used
+Operators are the same as functions, but are often infix
 
 <table>
     <tr>
@@ -427,3 +451,6 @@ Features I'm currently adding to matchbox.
 - Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
   - Maybe make `tag` take many args?
 - Concatenate two parts of a read together with an operator, e.g. when rotating a plasmid `[part1:_ part2:(AGCTAGTCG _)] => part2 + part1 |> file('rotated.fq')`
+- Figure out the file size estimation problem on gzipped files
+- Make sequence values case insensitive
+  - Make sequences permit IUPAC codes

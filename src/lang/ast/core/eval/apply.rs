@@ -27,8 +27,8 @@ pub fn apply<'a, 'b>(
 ) -> Result<&'a Val<'a>, FunctionError<'a>> {
     match &id[..] {
         // type casts
-        "cast_str" => {
-            match &args[..] {
+        "to_str" => {
+            match args {
                 // any primitive values can be printed
 
                 // str values just go straight through
@@ -38,7 +38,7 @@ pub fn apply<'a, 'b>(
                     true => arena.alloc(Val::Str(arena.alloc(String::from("true")))),
                     false => arena.alloc(Val::Str(arena.alloc(String::from("true")))),
                 }),
-                [Val::Num(n)] => Ok(arena.alloc(Val::Str(arena.alloc(format!("{n}"))))),
+                [Val::Num(n)] => Ok(arena.alloc(Val::Str(arena.alloc(n.to_string())))),
                 [Val::Seq(s)] => Ok(arena.alloc(Val::Str(arena.alloc(util::seq_to_string(s))))),
 
                 // bad argument types!
@@ -46,8 +46,8 @@ pub fn apply<'a, 'b>(
             }
         }
 
-        "cast_seq" => {
-            match &args[..] {
+        "to_seq" => {
+            match args {
                 // seq values just go straight through
                 [s @ Val::Seq(_)] => Ok(s),
 
@@ -70,7 +70,7 @@ pub fn apply<'a, 'b>(
 
         // length
         "length" | "len" => {
-            match &args[..] {
+            match args {
                 [Val::Str(s)] => Ok(arena.alloc(Val::Num(s.len() as i32))),
                 [Val::Seq(s)] => Ok(arena.alloc(Val::Num(s.len() as i32))),
 
@@ -81,7 +81,7 @@ pub fn apply<'a, 'b>(
 
         // minus / revcomp
         "minus" => {
-            match &args[..] {
+            match args {
                 [Val::Struct(sv)] => {
                     // first, take a slice of the sequence
                     let seq = match sv
@@ -101,9 +101,9 @@ pub fn apply<'a, 'b>(
                             Val::Str(q) => Ok(sv
                                 .with_all(
                                     &[
-                                        (&"seq", new_seq),
+                                        ("seq", new_seq),
                                         (
-                                            &"qual",
+                                            "qual",
                                             arena.alloc(Val::Str(
                                                 arena.alloc(
                                                     String::from_utf8(
@@ -147,7 +147,7 @@ pub fn apply<'a, 'b>(
         }
 
         "append" => {
-            match &args[..] {
+            match args {
                 [Val::Seq(s1), Val::Seq(s2)] => Ok(arena.alloc(Val::Seq(
                     arena.alloc(s1.iter().chain(*s2).cloned().collect_vec()),
                 ))),
@@ -158,7 +158,7 @@ pub fn apply<'a, 'b>(
         }
 
         "greater_than" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n), Val::Num(m)] => Ok(arena.alloc(Val::Bool(*n > *m))),
 
                 // bad argument types!
@@ -167,7 +167,7 @@ pub fn apply<'a, 'b>(
         }
 
         "greater_than_or_equal_to" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n), Val::Num(m)] => Ok(arena.alloc(Val::Bool(*n >= *m))),
 
                 // bad argument types!
@@ -176,7 +176,7 @@ pub fn apply<'a, 'b>(
         }
 
         "less_than" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n), Val::Num(m)] => Ok(arena.alloc(Val::Bool(*n < *m))),
 
                 // bad argument types!
@@ -185,7 +185,7 @@ pub fn apply<'a, 'b>(
         }
 
         "less_than_or_equal_to" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n), Val::Num(m)] => Ok(arena.alloc(Val::Bool(*n <= *m))),
 
                 // bad argument types!
@@ -194,7 +194,7 @@ pub fn apply<'a, 'b>(
         }
 
         "equal_to" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n), Val::Num(m)] => Ok(arena.alloc(Val::Bool(*n == *m))),
 
                 [Val::Str(s1), Val::Str(s2)] => Ok(arena.alloc(Val::Bool(**s1 == **s2))),
@@ -206,7 +206,7 @@ pub fn apply<'a, 'b>(
 
         // plus
         "plus" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n1), Val::Num(n2)] => Ok(arena.alloc(Val::Num(n1 + n2))),
 
                 // bad argument types!
@@ -215,7 +215,7 @@ pub fn apply<'a, 'b>(
         }
 
         "times" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n1), Val::Num(n2)] => Ok(arena.alloc(Val::Num(n1 * n2))),
 
                 // bad argument types!
@@ -224,7 +224,7 @@ pub fn apply<'a, 'b>(
         }
 
         "modulo" => {
-            match &args[..] {
+            match args {
                 [Val::Num(n1), Val::Num(n2)] => Ok(arena.alloc(Val::Num(n1 % n2))),
 
                 // bad argument types!
@@ -233,7 +233,7 @@ pub fn apply<'a, 'b>(
         }
 
         "translate" => {
-            match &args[..] {
+            match args {
                 [Val::Seq(seq)] => Ok(arena.alloc(Val::Str(arena.alloc(util::translate(seq))))),
 
                 // bad argument types!
@@ -493,7 +493,7 @@ pub fn apply<'a, 'b>(
             }
         }
         "send" => {
-            match &args[..] {
+            match args {
                 [Val::Handler(h), v] => Ok(arena.alloc(Val::Eff(v, h.clone()))),
 
                 // bad argument types!
@@ -503,7 +503,7 @@ pub fn apply<'a, 'b>(
 
         // handlers
         "file" => {
-            match &args[..] {
+            match args {
                 [Val::Str(s)] => {
                     Ok(arena.alloc(Val::Handler(handler::Handler::File(s.to_string()))))
                 }
@@ -514,7 +514,7 @@ pub fn apply<'a, 'b>(
         }
 
         // inputs
-        "tsv" => match &args[..] {
+        "tsv" => match args {
             [Val::Str(s)] => {
                 let mut rdr = csv::ReaderBuilder::new()
                     .delimiter(b'\t')
@@ -599,7 +599,7 @@ pub fn apply<'a, 'b>(
             _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
         },
 
-        "fa" | "fasta" => match &args[..] {
+        "fa" | "fasta" => match args {
             [Val::Str(s)] => {
                 let f = bio::io::fasta::Reader::from_file(s)
                     .map_err(|e| FunctionError::FileLoadError(format!("{:?}", e)))?;
