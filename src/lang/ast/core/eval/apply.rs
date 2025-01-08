@@ -259,7 +259,7 @@ pub fn apply<'a, 'b>(
                                     if let Val::Str(n) = name_val {
                                         if let Val::Seq(seq) = match seq_val {
                                             Val::Str(s) => {
-                                                apply(&"cast_seq".to_string(), &[seq_val], arena)?
+                                                apply(&"to_seq".to_string(), &[seq_val], arena)?
                                             }
                                             _ => seq_val,
                                         } {

@@ -82,7 +82,7 @@ peg::parser! {
         rule str_lit_reg() -> StrLitReg
             = e:brace(<exp()>)
                 // insert implicit cast
-                { StrLitReg::Exp(Exp::Call(Id::from("cast_str"), vec![e])) }
+                { StrLitReg::Exp(Exp::Call(Id::from("to_str"), vec![e])) }
             / s:chars()
                 // todo: fix this hardcoding
                 { StrLitReg::Str(s.replace("\\n", "\n").replace("\\t", "\t")) }
@@ -223,7 +223,7 @@ peg::parser! {
 
             / e:exp()
                 // insert implicit cast
-                { Reg::Exp(Exp::Call(Id::from("cast_seq"), vec![e])) }
+                { Reg::Exp(Exp::Call(Id::from("to_seq"), vec![e])) }
 
         rule arm() -> Arm
             = regs:brack(<seplist(<pat_reg()>,<_()>)>) _ opt_binds:("for" _ l:seplist(<bind()>,<",">) {l})? _ "=>" _ stmt:stmt()
