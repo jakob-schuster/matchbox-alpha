@@ -220,6 +220,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <th>FASTA</th>
         <th>FASTQ</th>
         <th>SAM</th>
+        <th>Paired FASTQ</th>
     </tr>
     <tr>
         <td><code>seq</code></td>
@@ -228,6 +229,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td>✅</td>
         <td>✅</td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>desc</code></td>
@@ -235,6 +237,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td>The entire description line of the read, after the ID. For FASTA, sometimes referred to as the definition line. </td>
         <td>✅</td>
         <td>✅</td>
+        <td></td>
         <td></td>
     </tr>
     <tr>
@@ -244,6 +247,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td>✅</td>
         <td>✅</td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>qual</code></td>
@@ -252,6 +256,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td>✅</td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>flag</code></td>
@@ -260,6 +265,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td></td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>rname</code></td>
@@ -268,6 +274,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td></td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>mapq</code></td>
@@ -276,6 +283,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td></td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>rnext</code></td>
@@ -284,6 +292,7 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td></td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>pnext</code></td>
@@ -292,11 +301,31 @@ FASTA, FASTQ and SAM reads contain slightly different fields. Depending on the f
         <td></td>
         <td></td>
         <td>✅</td>
+        <td></td>
     </tr>
     <tr>
         <td><code>tlen</code></td>
         <td><b>Num</b></td>
         <td>The template length.</td>
+        <td></td>
+        <td></td>
+        <td>✅</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td><code>r1</code></td>
+        <td><b>Rec</b></td>
+        <td>The first read of a paired FASTQ. <code>r1</code> has all the fields of a regular FASTQ record.</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>✅</td>
+    </tr>
+    <tr>
+        <td><code>r2</code></td>
+        <td><b>Rec</b></td>
+        <td>The second read of a paired FASTQ. <code>r2</code> all the fields of a regular FASTQ record.</td>
+        <td></td>
         <td></td>
         <td></td>
         <td>✅</td>
@@ -445,7 +474,6 @@ Operators are the same as functions, but are often infix
 
 Features I'm currently adding to matchbox.
 
-- Support for paired-end reads
 - Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
 - Handle SAM optional fields
 - Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
