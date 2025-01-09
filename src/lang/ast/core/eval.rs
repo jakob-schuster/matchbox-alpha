@@ -258,6 +258,7 @@ impl From<&Read<'_>> for OwnedRead {
                 qual: String::from_utf8(sam_read.qual().to_vec()).unwrap(),
             },
             Read::Seq(_) => todo!(),
+            Read::PairedEnd { r1, r2 } => panic!("Cannot write out a paired read!"),
             // Read::Seq { seq } =>
             //     OwnedRead::Seq { seq: seq.to_vec() },
             // Read::Fasta { name, seq } =>

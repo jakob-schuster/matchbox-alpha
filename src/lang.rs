@@ -53,6 +53,7 @@ pub enum RunError<'a> {
     ElabError(ElabError),
     EvalError(EvalError<'a>),
 }
+
 pub fn run<'a>(reads: &str, code: &str, global_config: &GlobalConfig) -> Result<(), RunError<'a>> {
     rayon::ThreadPoolBuilder::new()
         .num_threads(global_config.threads)
@@ -76,7 +77,12 @@ pub fn run<'a>(reads: &str, code: &str, global_config: &GlobalConfig) -> Result<
     let simple_core_prog = core_prog.simplify(&arena, &ctx).unwrap();
 
     // create a reader for the input reads
-    let reader = read::ReaderWrapped::new(reads, global_config.chunk_size, None).unwrap();
+    let reader = match &global_config.paired_with {
+        Some(reads_2) => {
+            read::ReaderWrapped::new_paired(reads, reads_2, global_config.chunk_size, None).unwrap()
+        }
+        _ => read::ReaderWrapped::new(reads, global_config.chunk_size, None).unwrap(),
+    };
 
     let mut handler = EffectHandler::default();
 

@@ -24,15 +24,18 @@ pub enum Read<'a> {
     Fastq(FastqRead<'a>),
     Sam(SamRead<'a>),
     Seq(&'a [u8]),
+
+    PairedEnd { r1: &'a Read<'a>, r2: &'a Read<'a> },
 }
 
 impl<'a> Debug for Read<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Fasta(arg0) => "Fasta".fmt(f),
-            Self::Fastq(arg0) => "Fastq".fmt(f),
-            Self::Sam(arg0) => "Sam".fmt(f),
-            Self::Seq(arg0) => "Seq".fmt(f),
+            Read::Fasta(arg0) => "Fasta".fmt(f),
+            Read::Fastq(arg0) => "Fastq".fmt(f),
+            Read::Sam(arg0) => "Sam".fmt(f),
+            Read::Seq(arg0) => "Seq".fmt(f),
+            Read::PairedEnd { r1, r2 } => "PairedEndFastq".fmt(f),
         }
     }
 }
@@ -64,6 +67,7 @@ impl<'a: 'b, 'b> Read<'a> {
             Read::Sam(_) => g(&[
                 "qname", "flag", "rname", "pos", "mapq", "rnext", "pnext", "tlen", "seq", "qual",
             ]),
+            Read::PairedEnd { r1, r2 } => g(&["r1", "r2"]),
         }
     }
 
@@ -110,6 +114,11 @@ impl<'a: 'b, 'b> Read<'a> {
             },
             Read::Seq(s) => match id {
                 "seq" => Ok(arena.alloc(core::Val::Seq(s))),
+                _ => Err(EvalError::ReadFieldError),
+            },
+            Read::PairedEnd { r1, r2 } => match id {
+                "r1" => Ok(arena.alloc(Val::Struct(core::StructVal::Read(r1)))),
+                "r2" => Ok(arena.alloc(Val::Struct(core::StructVal::Read(r2)))),
                 _ => Err(EvalError::ReadFieldError),
             },
         }
@@ -431,6 +440,41 @@ pub struct ReaderWrapped {
 }
 
 impl ReaderWrapped {
+    pub fn new_paired(
+        filename1: &str,
+        filename2: &str,
+        parallel_chunk_size: usize,
+        take_first: Option<usize>,
+    ) -> Result<ReaderWrapped, InputError> {
+        let (filetype1, bufread1) = reader(filename1)?;
+        let (filetype2, bufread2) = reader(filename2)?;
+
+        // make an estimate
+        let estimate = ReaderWrapped::estimate_reads(filename1, 10000000, &filetype1)
+            .map_err(InputError::FileOpenError)?;
+
+        // make the bar
+        let style = ProgressStyle::with_template(
+            "{prefix} {elapsed_precise} [{bar:40.red/yellow}] {percent}% {msg}",
+        )
+        .unwrap()
+        .progress_chars(" @=");
+        let bar = ProgressBar::new(estimate)
+            .with_style(style)
+            .with_prefix(String::from(filename1));
+        bar.set_draw_target(ProgressDrawTarget::stderr());
+
+        Ok(ReaderWrapped {
+            bar,
+            reader: Reader::BioPairedEndFastq {
+                buffer1: bufread1,
+                buffer2: bufread2,
+                parallel_chunk_size,
+                take_first,
+            },
+        })
+    }
+
     pub fn new(
         filename: &str,
         parallel_chunk_size: usize,
@@ -510,6 +554,12 @@ pub enum Reader {
     },
     BioFastaSingleThreaded {
         buffer: Box<dyn BufRead>,
+        take_first: Option<usize>,
+    },
+    BioPairedEndFastq {
+        buffer1: Box<dyn BufRead>,
+        buffer2: Box<dyn BufRead>,
+        parallel_chunk_size: usize,
         take_first: Option<usize>,
     },
 
@@ -593,6 +643,7 @@ impl Reader {
                     .records()
                     .count()
             }
+
             Reader::BioFastaSingleThreaded { buffer, .. } => {
                 bio::io::fasta::Reader::from_bufread(buffer)
                     .records()
@@ -604,6 +655,14 @@ impl Reader {
                 let header = reader.read_header();
                 reader.records().count()
             }
+            Reader::BioPairedEndFastq {
+                buffer1,
+                buffer2,
+                parallel_chunk_size,
+                take_first,
+            } => bio::io::fastq::Reader::from_bufread(buffer1)
+                .records()
+                .count(),
         }
     }
 
@@ -791,6 +850,43 @@ impl Reader {
 
                     for out in outs {
                         global_fn(out, global_data);
+                    }
+
+                    bar.inc(parallel_chunk_size as u64);
+                }
+            }
+            Reader::BioPairedEndFastq {
+                buffer1,
+                buffer2,
+                parallel_chunk_size,
+                take_first,
+            } => {
+                let input_records1 = bio::io::fastq::Reader::from_bufread(buffer1).records();
+                let input_records2 = bio::io::fastq::Reader::from_bufread(buffer2).records();
+                let input_records = input_records1.zip(input_records2);
+
+                let recs = match take_first {
+                    Some(n) => itertools::Either::Right(input_records.take(n)),
+                    None => itertools::Either::Left(input_records),
+                };
+
+                for bunch in &recs.chunks(parallel_chunk_size) {
+                    let mut outs = Vec::new();
+
+                    bunch
+                        .collect_vec()
+                        .into_par_iter()
+                        .map(|result| match result {
+                            (Ok(record1), Ok(record2)) => local_fn(Read::PairedEnd {
+                                r1: &Read::Fastq(FastqRead::BioFastq(&record1)),
+                                r2: &Read::Fastq(FastqRead::BioFastq(&record2)),
+                            }),
+                            _ => panic!("Bad record!"),
+                        })
+                        .collect_into_vec(&mut outs);
+
+                    for t in outs {
+                        global_fn(t, global_data)
                     }
 
                     bar.inc(parallel_chunk_size as u64);

@@ -49,6 +49,9 @@ mod cli {
 
         #[arg(short, long, default_value_t = 10000)]
         pub chunk_size: usize,
+
+        #[arg(short, long)]
+        pub paired_with: Option<String>,
     }
 
     #[derive(Debug, Subcommand)]
