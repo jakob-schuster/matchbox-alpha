@@ -29,6 +29,12 @@ When you want to write longer matchbox code, put it in a `.mb` file and use the 
 matchbox script "trim.mb" reads.fq
 ```
 
+To process paired FASTQs, provide your read2 file using the command-line parameter `paired-with`:
+
+```
+matchbox script my_script.mb read1.fq --paired-with read2.fq
+```
+
 <!-- # Example scripts
 
 Trim off standard PCB109 primers,  -->
