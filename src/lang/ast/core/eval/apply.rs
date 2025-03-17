@@ -46,6 +46,40 @@ pub fn apply<'a, 'b>(
             }
         }
 
+        "to_upper" => match args {
+            [Val::Str(s)] => Ok(arena.alloc(Val::Str(arena.alloc(s.to_ascii_uppercase())))),
+
+            // bad argument types!
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
+        "to_lower" => match args {
+            [Val::Str(s)] => Ok(arena.alloc(Val::Str(arena.alloc(s.to_ascii_lowercase())))),
+
+            // bad argument types!
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
+        "find" => match args {
+            [Val::Str(s1), Val::Str(s2)] => Ok(arena.alloc(Val::Num(match s1.find(s2) {
+                Some(i) => i as i32,
+                None => -1,
+            }))),
+
+            // bad argument types!
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
+        "rfind" => match args {
+            [Val::Str(s1), Val::Str(s2)] => Ok(arena.alloc(Val::Num(match s1.rfind(s2) {
+                Some(i) => i as i32,
+                None => -1,
+            }))),
+
+            // bad argument types!
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
         "to_seq" => {
             match args {
                 // seq values just go straight through

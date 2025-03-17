@@ -1,8 +1,10 @@
 # Matchbox
 
-Matchbox is a flexible read processor, capable of performing powerful transformations on your FASTA/FASTQ/SAM files.
+The prototype version of matchbox, a flexible read processor, capable of performing powerful transformations on your FASTA/FASTQ/SAM files. 
 
-*This is an alpha version, and I guarantee I will make breaking changes to matchbox syntax and behaviour. The final version will feel either a little bit different, or completely different. Use at your own risk! Italicised annotations on this readme explain features I'm looking to redesign. If you have any ideas about any of this, please share them with me!*
+Currently this is the most stable version of matchbox; once the [release version](https://github.com/jakob-schuster/matchbox/tree/main) is fully functional, this repository will become purely archival. 
+
+*⚠️ WARNING ⚠️ This is an alpha version, and I guarantee I will make breaking changes to matchbox syntax and behaviour. The final version will feel either a little bit different, or completely different. Use at your own risk! Italicised annotations on this readme explain features I'm looking to redesign. If you have any ideas about any of this, please share them with me!*
 
 # Installation
 
@@ -474,7 +476,9 @@ Operators are the same as functions, but are often infix
 
 Features I'm currently adding to matchbox.
 
-- Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
+- Give command line args to a matchbox script `matchbox --args "frw4 = AGCTAGTCGATG"`
+    - Or draw from nextflow like `matchbox --threads 4 -frw4 ACGATGCTGATGCTG`
+    - Ability to access input file name in the script (so you can call your outputs like `'{input_file_name}_trimmed.fq'`)
 - Handle SAM optional fields
 - Ability to combine strings/seqs with binary `+` operator. so `read.tag('bc={bc1.seq+bc2.seq+bc3.seq}')` works intuitively
   - Maybe make `tag` take many args?
@@ -482,3 +486,6 @@ Features I'm currently adding to matchbox.
 - Figure out the file size estimation problem on gzipped files
 - Make sequence values case insensitive
   - Make sequences permit IUPAC codes
+- Add comments
+- Adding headers to csvs?
+    - Maybe 

@@ -77,7 +77,7 @@ pub fn run<'a>(reads: &str, code: &str, global_config: &GlobalConfig) -> Result<
     let simple_core_prog = core_prog.simplify(&arena, &ctx).unwrap();
 
     // create a reader for the input reads
-    let reader = match &global_config.paired_with {
+    let reader: read::ReaderWrapped = match &global_config.paired_with {
         Some(reads_2) => {
             read::ReaderWrapped::new_paired(reads, reads_2, global_config.chunk_size, None).unwrap()
         }
