@@ -464,15 +464,31 @@ impl ReaderWrapped {
             .with_prefix(String::from(filename1));
         bar.set_draw_target(ProgressDrawTarget::stderr());
 
-        Ok(ReaderWrapped {
-            bar,
-            reader: Reader::BioPairedEndFastq {
-                buffer1: bufread1,
-                buffer2: bufread2,
-                parallel_chunk_size,
-                take_first,
-            },
-        })
+        match (filetype1, filetype2) {
+            (FileType::Fasta, FileType::Fasta) => Ok(ReaderWrapped {
+                bar,
+                reader: Reader::BioPairedEndFasta {
+                    buffer1: bufread1,
+                    buffer2: bufread2,
+                    parallel_chunk_size,
+                    take_first,
+                },
+            }),
+            (FileType::Fastq, FileType::Fastq) => Ok(ReaderWrapped {
+                bar,
+                reader: Reader::BioPairedEndFastq {
+                    buffer1: bufread1,
+                    buffer2: bufread2,
+                    parallel_chunk_size,
+                    take_first,
+                },
+            }),
+            _ => Err(InputError::FileTypeError(
+                FileTypeError::UnsupportedPairedCombination(
+                    "can only pair two FASTQs or two FASTAs!".to_string(),
+                ),
+            )),
+        }
     }
 
     pub fn new(
@@ -557,6 +573,12 @@ pub enum Reader {
         take_first: Option<usize>,
     },
     BioPairedEndFastq {
+        buffer1: Box<dyn BufRead>,
+        buffer2: Box<dyn BufRead>,
+        parallel_chunk_size: usize,
+        take_first: Option<usize>,
+    },
+    BioPairedEndFasta {
         buffer1: Box<dyn BufRead>,
         buffer2: Box<dyn BufRead>,
         parallel_chunk_size: usize,
@@ -661,6 +683,14 @@ impl Reader {
                 parallel_chunk_size,
                 take_first,
             } => bio::io::fastq::Reader::from_bufread(buffer1)
+                .records()
+                .count(),
+            Reader::BioPairedEndFasta {
+                buffer1,
+                buffer2,
+                parallel_chunk_size,
+                take_first,
+            } => bio::io::fasta::Reader::from_bufread(buffer1)
                 .records()
                 .count(),
         }
@@ -892,6 +922,43 @@ impl Reader {
                     bar.inc(parallel_chunk_size as u64);
                 }
             }
+            Reader::BioPairedEndFasta {
+                buffer1,
+                buffer2,
+                parallel_chunk_size,
+                take_first,
+            } => {
+                let input_records1 = bio::io::fasta::Reader::from_bufread(buffer1).records();
+                let input_records2 = bio::io::fasta::Reader::from_bufread(buffer2).records();
+                let input_records = input_records1.zip(input_records2);
+
+                let recs = match take_first {
+                    Some(n) => itertools::Either::Right(input_records.take(n)),
+                    None => itertools::Either::Left(input_records),
+                };
+
+                for bunch in &recs.chunks(parallel_chunk_size) {
+                    let mut outs = Vec::new();
+
+                    bunch
+                        .collect_vec()
+                        .into_par_iter()
+                        .map(|result| match result {
+                            (Ok(record1), Ok(record2)) => local_fn(Read::PairedEnd {
+                                r1: &Read::Fasta(FastaRead::BioFasta(&record1)),
+                                r2: &Read::Fasta(FastaRead::BioFasta(&record2)),
+                            }),
+                            _ => panic!("Bad record!"),
+                        })
+                        .collect_into_vec(&mut outs);
+
+                    for t in outs {
+                        global_fn(t, global_data)
+                    }
+
+                    bar.inc(parallel_chunk_size as u64);
+                }
+            }
         };
     }
 }
@@ -906,6 +973,7 @@ use std::{
 #[derive(Debug)]
 pub enum FileTypeError {
     UnknownFileType,
+    UnsupportedPairedCombination(String),
 }
 
 pub enum FileType {

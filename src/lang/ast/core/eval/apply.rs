@@ -666,6 +666,35 @@ pub fn apply<'a, 'b>(
             _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
         },
 
+        "contains" => match args {
+            [Val::List(v), v0] => {
+                // look for the query value in the list
+                for v1 in v {
+                    if v1.eq(v0) {
+                        // if you find it, return early
+                        return Ok(arena.alloc(Val::Bool(true)));
+                    }
+                }
+                Ok(arena.alloc(Val::Bool(false)))
+            }
+
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
+        "distance" => match args {
+            [Val::Seq(s0), Val::Seq(s1)] => {
+                let distance = bio::alignment::distance::levenshtein(s0, s1);
+                Ok(arena.alloc(Val::Num(distance as i32)))
+            }
+
+            [Val::Str(s0), Val::Str(s1)] => {
+                let distance = bio::alignment::distance::levenshtein(s0.as_bytes(), s1.as_bytes());
+                Ok(arena.alloc(Val::Num(distance as i32)))
+            }
+
+            _ => Err(FunctionError::BadArgumentTypes(id.clone(), args.to_vec())),
+        },
+
         _ =>
         // not a built-in function!
         {
