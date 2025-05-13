@@ -1,8 +1,8 @@
-# Matchbox
+<p align="center">
+    <img src="figures/monochrome_banner.png" title="matchbox" alt="matchbox" width="600">
+</p>
 
-The prototype version of matchbox, a flexible read processor, capable of performing powerful transformations on your FASTA/FASTQ/SAM files. 
-
-Currently this is the most stable version of matchbox; once the [release version](https://github.com/jakob-schuster/matchbox/tree/main) is fully functional, this repository will become purely archival. 
+This was the alpha version of *matchbox*. [The release version is now available, with more features and ongoing support!](https://github.com/jakob-schuster/matchbox) This repository is deprecated, and exists purely for archival purposes.
 
 *⚠️ WARNING ⚠️ This is an alpha version, and I guarantee I will make breaking changes to matchbox syntax and behaviour. The final version will feel either a little bit different, or completely different. Use at your own risk! Italicised annotations on this readme explain features I'm looking to redesign. If you have any ideas about any of this, please share them with me!*
 
